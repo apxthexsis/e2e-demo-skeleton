@@ -101,7 +101,7 @@ On pull requests, CI runs **only the affected tests**; on `main` it runs the ful
 
 `.github/workflows/e2e.yml` installs dependencies with npm cache, caches the Playwright Chromium binary, runs the affected (PR) or full (main) suite with 2 parallel workers, and uploads the HTML report as an artifact on every run — pass or fail.
 
-On every push to `main`, a second job publishes the HTML report to **GitHub Pages**, so the latest run is always browsable at [apxthexsis.github.io/e2e-showcase](https://apxthexsis.github.io/e2e-showcase/). (One-time setup: repo Settings → Pages → Source: "GitHub Actions".)
+On every push to `main`, a second job publishes the HTML report to **GitHub Pages**, so the latest run is always browsable at [apxthexsis.github.io/e2e-showcase](https://apxthexsis.github.io/e2e-showcase/). The workflow enables Pages automatically on first run (`actions/configure-pages` with `enablement: true`) — no manual settings step needed.
 
 ## The demo app: FlowBoard
 
