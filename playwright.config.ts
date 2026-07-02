@@ -12,8 +12,11 @@ export default defineConfig({
   testDir: './e2e',
   outputDir: './e2e/results',
   timeout: 60_000,
+  expect: { timeout: 10_000 },
   fullyParallel: true,
-  workers: IS_CI ? 1 : undefined,
+  // The suite is parallel-safe by design (unique test data per worker),
+  // so CI runs multiple workers too — not just local machines.
+  workers: IS_CI ? 2 : undefined,
   retries: IS_CI ? 1 : 0,
   forbidOnly: IS_CI,
   reporter: [

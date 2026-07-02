@@ -1,7 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 import { BasePage } from './base-page';
 import { test as projectTest } from './create-project.page';
-import { WAIT_TIMEOUTS } from '../utils/common';
 
 // Chained fixture: extends the project fixture so every task spec starts
 // with a freshly created project without repeating setup code.
@@ -11,24 +10,20 @@ export class ManageTasksPage extends BasePage {
   async openProject(projectName: string): Promise<void> {
     await this.navigateTo('/');
     await this.waitForDashboard();
-    await this.utils.waitAndClick(
-      this.locators.Dashboard.projectCardByName(projectName)
-    );
+    await this.page
+      .locator(this.locators.Dashboard.projectCardByName(projectName))
+      .click();
     await expect(
       this.page.locator(this.locators.Project.projectTitle)
-    ).toHaveText(projectName, {
-      timeout: WAIT_TIMEOUTS.medium
-    });
+    ).toHaveText(projectName);
   }
 
   async addTask(title: string): Promise<void> {
-    await this.utils.waitAndFill(this.locators.Project.taskTitleInput, title);
-    await this.utils.waitAndClick(this.locators.Project.taskSubmitButton);
+    await this.page.locator(this.locators.Project.taskTitleInput).fill(title);
+    await this.page.locator(this.locators.Project.taskSubmitButton).click();
     await expect(
       this.page.locator(this.locators.Project.taskItemByTitle(title))
-    ).toBeVisible({
-      timeout: WAIT_TIMEOUTS.medium
-    });
+    ).toBeVisible();
   }
 
   async completeTask(title: string): Promise<void> {
@@ -37,7 +32,7 @@ export class ManageTasksPage extends BasePage {
       .check();
     await expect(
       this.page.locator(this.locators.Project.taskItemByTitle(title))
-    ).toHaveClass(/done/, { timeout: WAIT_TIMEOUTS.medium });
+    ).toHaveClass(/done/);
   }
 }
 

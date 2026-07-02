@@ -1,6 +1,6 @@
 import { expect, test as base, type Page } from '@playwright/test';
 import { BasePage } from './base-page';
-import { fetchOtpCode, WAIT_TIMEOUTS } from '../utils/common';
+import { fetchOtpCode } from '../utils/otp';
 import { TestDataFactory } from '../utils/test-data-factory';
 
 // Auth specs must start unauthenticated, so this fixture chain drops the
@@ -14,23 +14,28 @@ export const test = base.extend({
 export class LoginPage extends BasePage {
   async setup(): Promise<void> {
     await this.navigateTo('/');
-    await this.page
-      .locator(this.locators.Auth.authContainer)
-      .waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.medium });
+    await expect(
+      this.page.locator(this.locators.Auth.authContainer)
+    ).toBeVisible();
   }
 
   async requestCode(email: string): Promise<void> {
-    await this.utils.waitAndFill(this.locators.Auth.emailInput, email);
-    await this.utils.waitAndClick(this.locators.Auth.requestCodeButton);
-    await this.page
-      .locator(this.locators.Auth.otpContainer)
-      .waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.medium });
+    await this.page.locator(this.locators.Auth.emailInput).fill(email);
+    await this.page.locator(this.locators.Auth.requestCodeButton).click();
+    // The OTP step replaces the email step asynchronously — assert the
+    // transition finished before the flow reads the code.
+    await expect(
+      this.page.locator(this.locators.Auth.otpContainer)
+    ).toBeVisible();
+  }
+
+  async submitOtpCode(code: string): Promise<void> {
+    await this.page.locator(this.locators.Auth.otpInput).fill(code);
+    await this.page.locator(this.locators.Auth.verifyCodeButton).click();
   }
 
   async submitOtp(email: string): Promise<void> {
-    const code = await fetchOtpCode(this.page, email);
-    await this.utils.waitAndFill(this.locators.Auth.otpInput, code);
-    await this.utils.waitAndClick(this.locators.Auth.verifyCodeButton);
+    await this.submitOtpCode(await fetchOtpCode(this.page, email));
   }
 
   async verifyLoggedIn(email: string): Promise<void> {
@@ -38,6 +43,12 @@ export class LoginPage extends BasePage {
     await expect(this.page.locator(this.locators.Auth.userEmail)).toHaveText(
       email
     );
+  }
+
+  async verifyErrorVisible(): Promise<void> {
+    await expect(
+      this.page.locator(this.locators.Auth.errorBanner)
+    ).toBeVisible();
   }
 
   async performLogin(
@@ -51,10 +62,10 @@ export class LoginPage extends BasePage {
   }
 
   async logout(): Promise<void> {
-    await this.utils.waitAndClick(this.locators.Auth.logoutButton);
-    await this.page
-      .locator(this.locators.Auth.authContainer)
-      .waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.medium });
+    await this.page.locator(this.locators.Auth.logoutButton).click();
+    await expect(
+      this.page.locator(this.locators.Auth.authContainer)
+    ).toBeVisible();
   }
 }
 

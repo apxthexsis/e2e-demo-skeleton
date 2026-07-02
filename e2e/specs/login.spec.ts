@@ -16,10 +16,7 @@ test(
     const loginPage = new LoginPage(page);
     await loginPage.setup();
     await loginPage.requestCode('invalid-otp@demo.test');
-    await page.fill('[data-testid="otp-input"]', 'WRONG1');
-    await page.click('[data-testid="verify-code-button"]');
-    await page
-      .locator('[data-testid="error-banner"]')
-      .waitFor({ state: 'visible' });
+    await loginPage.submitOtpCode('WRONG1');
+    await loginPage.verifyErrorVisible();
   }
 );

@@ -1,5 +1,8 @@
 # E2E Showcase
 
+[![E2E](https://github.com/apxthexsis/e2e-showcase/actions/workflows/e2e.yml/badge.svg)](https://github.com/apxthexsis/e2e-showcase/actions/workflows/e2e.yml)
+[![Playwright report](https://img.shields.io/badge/Playwright-HTML%20report-2EAD33?logo=playwright)](https://apxthexsis.github.io/e2e-showcase/)
+
 A public, customer-facing demonstration of a **production-grade Playwright E2E architecture**: page objects, chained fixtures, centralized locators, tag-based test selection, a one-time auth setup project, and a CI pipeline that only runs the tests affected by a change.
 
 Everything is self-contained — the repo ships **FlowBoard**, a small zero-dependency demo web app (email + OTP login, projects, tasks) that the suite runs against, so `npm ci && npx playwright test` works out of the box with no external services.
@@ -35,8 +38,10 @@ e2e/
 ├── locators/     # centralized data-testid selectors, one file per UI area
 ├── fixtures/     # static assets (empty storage state)
 ├── constants/    # stable strings shared between setup and specs
-└── utils/        # test-data factory, wait/click helpers, OTP retrieval
+└── utils/        # test-data factory, OTP retrieval
 ```
+
+Page objects lean on Playwright's built-in auto-waiting (`locator.click()` already waits for visibility and actionability) — no hand-rolled `waitAndClick` wrappers. Explicit `expect(...).toBeVisible()` appears only where it asserts a real state transition, like the OTP step replacing the email step.
 
 Specs stay one-liners because flows live in page objects:
 
@@ -77,7 +82,9 @@ test(
 
 The `setup` Playwright project runs first, performs the email + OTP login once, and saves the browser storage state to `e2e/results/.state.json`. The main `chromium` project depends on it and reuses that state, so functional specs never waste time logging in. Auth specs opt out by overriding `storageState` back to `undefined`.
 
-The OTP is fetched from a **test-only API endpoint** — the same pattern real suites use to read codes from Redis or a mail-catcher instead of polling a live inbox.
+The OTP is fetched from a **test-only API endpoint** (`e2e/utils/otp.ts`). The interface is the point: in production suites I back the very same `fetchOtpCode(email)` contract with **Gmail IMAP polling** (reading real delivered emails), Redis lookups, or a mail-catcher like MailHog — the login flow and every spec stay untouched, only the retrieval implementation swaps.
+
+Tests are **parallel-safe by design**: every spec generates its own user/project/task data through the test-data factory, so nothing is shared between workers. That's why CI runs with multiple workers (`workers: 2` + `fullyParallel`) instead of falling back to a single-worker "safe mode".
 
 ### 4. Tag-based selective execution
 
@@ -92,7 +99,9 @@ On pull requests, CI runs **only the affected tests**; on `main` it runs the ful
 
 ### 5. CI pipeline
 
-`.github/workflows/e2e.yml` installs dependencies with npm cache, caches the Playwright Chromium binary, runs the affected (PR) or full (main) suite, and uploads the HTML report as an artifact on every run — pass or fail.
+`.github/workflows/e2e.yml` installs dependencies with npm cache, caches the Playwright Chromium binary, runs the affected (PR) or full (main) suite with 2 parallel workers, and uploads the HTML report as an artifact on every run — pass or fail.
+
+On every push to `main`, a second job publishes the HTML report to **GitHub Pages**, so the latest run is always browsable at [apxthexsis.github.io/e2e-showcase](https://apxthexsis.github.io/e2e-showcase/). (One-time setup: repo Settings → Pages → Source: "GitHub Actions".)
 
 ## The demo app: FlowBoard
 
