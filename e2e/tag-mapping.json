@@ -1,0 +1,10 @@
+{
+  "mappings": {
+    "app/server.js": ["@auth", "@projects", "@tasks"],
+    "app/public/app.js": ["@auth", "@projects", "@tasks"],
+    "app/public/index.html": ["@app-health-check"],
+    "app/public/app.css": ["@app-health-check"],
+    "e2e": ["@sanity", "@ci"]
+  },
+  "alwaysRunTags": []
+}
