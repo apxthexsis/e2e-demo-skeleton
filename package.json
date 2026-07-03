@@ -1,0 +1,27 @@
+{
+  "name": "e2e-showcase",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Playwright E2E testing showcase: page objects, chained fixtures, tag-based selection and CI-ready architecture, demonstrated against a self-contained demo app.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "app:serve": "node app/server.js",
+    "e2e:install": "playwright install chromium",
+    "e2e:test": "playwright test",
+    "e2e:test:sanity": "playwright test --grep @sanity --workers=1 --retries=1",
+    "e2e:test:headed": "playwright test --headed",
+    "e2e:test:ui": "playwright test --ui",
+    "e2e:get-affected-tags": "node scripts/get-affected-tags.ts",
+    "e2e:test:affected": "bash scripts/run-affected.sh",
+    "e2e:report": "playwright show-report e2e/test-reports"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.0"
+  }
+}

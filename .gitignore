@@ -1,0 +1,5 @@
+node_modules/
+e2e/results/
+e2e/test-reports/
+*.log
+.DS_Store
